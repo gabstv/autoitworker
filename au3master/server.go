@@ -1,7 +1,11 @@
 package au3master
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +16,10 @@ type Server struct {
 	r         *gin.Engine
 	tosend    chan *Command
 	toreceive map[string]chan *Result
+	hostaddr  string
+	shutdown0 chan bool
+	shutdown1 chan bool
+	htps      *http.Server
 }
 
 // New autoit command server relay
@@ -22,21 +30,66 @@ func New(path string, devmode bool) *Server {
 	s := &Server{
 		tosend:    make(chan *Command, 32),
 		toreceive: make(map[string]chan *Result),
+		hostaddr:  path,
+		shutdown0: make(chan bool, 1),
+		shutdown1: make(chan bool, 1),
 	}
 	r := gin.Default()
-	setup(r)
+	setup(s)
 	s.r = r
+	go func() {
+		<-s.shutdown1
+
+	}()
 	return s
 }
 
-func setup(r *gin.Engine) {
+// NewProduction autoit command server relay
+func NewProduction(path string) *Server {
+	return New(path, false)
+}
+
+func setup(s *Server) {
+	r := s.r
 	// the route that the autoit program accesses to
 	// see if there are any commands to be run
 	r.GET("/sync", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"success":  true,
-			"commands": make([]int, 0),
-		})
+		select {
+		case <-s.shutdown0:
+			c.JSON(http.StatusOK, gin.H{
+				"action": "shutdown",
+			})
+			s.shutdown1 <- true
+		case cmd := <-s.tosend:
+			c.JSON(http.StatusOK, gin.H{
+				"action":  "command",
+				"command": cmd,
+			})
+		case <-time.After(time.Millisecond * 100):
+			c.String(http.StatusOK, "0")
+		}
+	})
+	r.POST("/sync", func(c *gin.Context) {
+		jd := &au3resp{}
+		if err := c.BindJSON(jd); err != nil {
+			fmt.Println("JSON error", err.Error())
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		if jd.Type == "command" {
+			if chan0, ok := s.toreceive[jd.CommandID]; ok {
+				chan0 <- &Result{
+					CommandID: jd.CommandID,
+					Value:     jd.Value,
+				}
+				c.String(http.StatusOK, "1")
+			} else {
+				fmt.Println("POST /sync invalid ID", jd.CommandID)
+				c.AbortWithStatus(http.StatusBadRequest)
+			}
+			return
+		}
+		c.AbortWithStatus(http.StatusNotFound)
 	})
 	r.GET("/health_check", func(c *gin.Context) {
 		c.String(http.StatusOK, "1")
@@ -49,6 +102,15 @@ func (s *Server) wait(id string) *Result {
 	return res
 }
 
+// RunHTTP server (blocks)
+func (s *Server) RunHTTP() error {
+	s.htps = &http.Server{
+		Addr:    s.hostaddr,
+		Handler: s.r,
+	}
+	return s.htps.ListenAndServe()
+}
+
 // WinGetTitle Retrieves the full title from a window.
 //   title - The title/hWnd/class of the window to get the title.
 //           See Title special definition:
@@ -56,9 +118,22 @@ func (s *Server) wait(id string) *Result {
 //   text  - [optional] The text of the window to get the title.
 //           Default is an empty string. See Text special definition:
 //           https://www.autoitscript.com/autoit3/docs/intro/windowsbasic.htm#specialtext
-func (s *Server) WinGetTitle(title, text string) *Result {
+func (s *Server) WinGetTitle(title, text string) string {
 	cmd := newCommand("WinGetTitle")
 	cmd.SetParams(title, text)
 	s.tosend <- cmd
-	return s.wait(cmd.ID)
+	result := s.wait(cmd.ID)
+	rr := ""
+	json.Unmarshal(result.Value, &rr)
+	return rr
+}
+
+// Shutdown the http server
+func (s *Server) Shutdown() {
+	s.shutdown0 <- true
+	<-s.shutdown1
+	time.Sleep(time.Millisecond * 10)
+	if s.htps != nil {
+		s.htps.Shutdown(context.Background())
+	}
 }
