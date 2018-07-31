@@ -43,6 +43,8 @@ Func MainLoop()
             Switch ($action)
                 Case "command"
                     ParseCommand($object)
+                Case "shutdown"
+                    Return 0
                 Case Else
                     ; do nothing
             EndSwitch

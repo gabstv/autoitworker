@@ -35,12 +35,8 @@ func New(path string, devmode bool) *Server {
 		shutdown1: make(chan bool, 1),
 	}
 	r := gin.Default()
-	setup(s)
 	s.r = r
-	go func() {
-		<-s.shutdown1
-
-	}()
+	setup(s)
 	return s
 }
 

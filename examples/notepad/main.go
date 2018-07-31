@@ -18,7 +18,7 @@ func main() {
 	sv := au3master.NewProduction(conn)
 	go sv.RunHTTP()
 	cmd := exec.Command("au3worker.exe", fmt.Sprintf("http://%s", conn))
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		panic(err)
 	}
