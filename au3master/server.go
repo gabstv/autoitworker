@@ -34,7 +34,8 @@ func New(path string, devmode bool) *Server {
 		shutdown0: make(chan bool, 1),
 		shutdown1: make(chan bool, 1),
 	}
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
 	s.r = r
 	setup(s)
 	return s
