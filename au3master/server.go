@@ -38,6 +38,9 @@ func setup(r *gin.Engine) {
 			"commands": make([]int, 0),
 		})
 	})
+	r.GET("/health_check", func(c *gin.Context) {
+		c.String(http.StatusOK, "1")
+	})
 }
 
 func (s *Server) wait(id string) *Result {

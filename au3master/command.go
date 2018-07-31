@@ -6,9 +6,9 @@ import (
 
 // Command is a representation of a autoit 3 function call
 type Command struct {
-	ID     string
-	Name   string
-	Params []string
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Params []string `json:"params"`
 }
 
 func newCommand(name string) *Command {
