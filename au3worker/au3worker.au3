@@ -73,13 +73,13 @@ Func ParseCommand(ByRef $object)
     EndSwitch
 EndFunc
 
-Func Run()
+Func Run1()
     Local $lastCode = 1
-    While $lastCode
+    While $lastCode = 1
         Sleep(10)
         $lastCode = MainLoop()
     WEnd
     Exit 0
 EndFunc
 
-Run()
+Run1()
