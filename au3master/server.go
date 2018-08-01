@@ -213,6 +213,21 @@ func (s *Server) ControlSetText2(title, text string, controlID int, setText stri
 	return rr
 }
 
+// TestConnection tests the connection with the localhost http server
+func (s *Server) TestConnection() bool {
+	clcl := &http.Client{
+		Timeout: time.Second * 2,
+	}
+	resp, err := clcl.Get(fmt.Sprintf("http://%s/health_check", s.hostaddr))
+	if err != nil {
+		return false
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+	return true
+}
+
 // Shutdown the http server
 func (s *Server) Shutdown() {
 	s.shutdown0 <- true
