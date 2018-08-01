@@ -8,9 +8,9 @@ import (
 
 // Command is a representation of a autoit 3 function call
 type Command struct {
-	ID     string   `json:"id"`
-	Name   string   `json:"name"`
-	Params []string `json:"params"`
+	ID     string        `json:"id"`
+	Name   string        `json:"name"`
+	Params []interface{} `json:"params"`
 }
 
 func newCommand(name string) *Command {
@@ -26,8 +26,8 @@ func newCommand(name string) *Command {
 }
 
 // SetParams assigns the Params of the command struct
-func (cmd *Command) SetParams(v ...string) {
-	p := make([]string, len(v))
+func (cmd *Command) SetParams(v ...interface{}) {
+	p := make([]interface{}, len(v))
 	for k, val := range v {
 		p[k] = val
 	}

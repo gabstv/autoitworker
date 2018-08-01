@@ -22,8 +22,8 @@ type Server struct {
 	htps      *http.Server
 }
 
-// New autoit command server relay
-func New(path string, devmode bool) *Server {
+// new autoit command server relay
+func new(path string, devmode bool) *Server {
 	if !devmode {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -36,6 +36,9 @@ func New(path string, devmode bool) *Server {
 	}
 	r := gin.New()
 	r.Use(gin.Recovery())
+	if devmode {
+		r.Use(gin.Logger())
+	}
 	s.r = r
 	setup(s)
 	return s
@@ -43,7 +46,12 @@ func New(path string, devmode bool) *Server {
 
 // NewProduction autoit command server relay
 func NewProduction(path string) *Server {
-	return New(path, false)
+	return new(path, false)
+}
+
+// NewDevelopment autoit command server relay
+func NewDevelopment(path string) *Server {
+	return new(path, true)
 }
 
 func setup(s *Server) {
@@ -121,6 +129,86 @@ func (s *Server) WinGetTitle(title, text string) string {
 	s.tosend <- cmd
 	result := s.wait(cmd.ID)
 	rr := ""
+	json.Unmarshal(result.Value, &rr)
+	return rr
+}
+
+// ControlGetText Retrieves text from a control.
+//   title     - The title/hWnd/class of the window to get the title.
+//               See Title special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsadvanced.htm
+//   text      - [optional] The text of the window to get the title.
+//               Default is an empty string. See Text special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsbasic.htm#specialtext
+//   controlID - The control to interact with. See Controls:
+//               https://www.autoitscript.com/autoit3/docs/intro/controls.htm
+func (s *Server) ControlGetText(title, text, controlID string) string {
+	cmd := newCommand("ControlGetText")
+	cmd.SetParams(title, text, controlID)
+	s.tosend <- cmd
+	result := s.wait(cmd.ID)
+	rr := ""
+	json.Unmarshal(result.Value, &rr)
+	return rr
+}
+
+// ControlGetText2 Retrieves text from a control (ID).
+//   title     - The title/hWnd/class of the window to get the title.
+//               See Title special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsadvanced.htm
+//   text      - [optional] The text of the window to get the title.
+//               Default is an empty string. See Text special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsbasic.htm#specialtext
+//   controlID - The control to interact with. See Controls:
+//               https://www.autoitscript.com/autoit3/docs/intro/controls.htm
+func (s *Server) ControlGetText2(title, text string, controlID int) string {
+	cmd := newCommand("ControlGetText")
+	cmd.SetParams(title, text, controlID)
+	s.tosend <- cmd
+	result := s.wait(cmd.ID)
+	rr := ""
+	json.Unmarshal(result.Value, &rr)
+	return rr
+}
+
+// ControlSetText Sets text of a control.
+//   title     - The title/hWnd/class of the window to get the title.
+//               See Title special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsadvanced.htm
+//   text      - [optional] The text of the window to get the title.
+//               Default is an empty string. See Text special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsbasic.htm#specialtext
+//   controlID - The control to interact with. See Controls:
+//               https://www.autoitscript.com/autoit3/docs/intro/controls.htm
+//   setText   - The text to be applied to the control.
+//   flag      - [optional] when different from 0 (default) will force the target window to be redrawn.
+func (s *Server) ControlSetText(title, text, controlID, setText string, flag int) bool {
+	cmd := newCommand("ControlSetText")
+	cmd.SetParams(title, text, controlID, setText, flag)
+	s.tosend <- cmd
+	result := s.wait(cmd.ID)
+	rr := false
+	json.Unmarshal(result.Value, &rr)
+	return rr
+}
+
+// ControlSetText2 Sets text of a control.
+//   title     - The title/hWnd/class of the window to get the title.
+//               See Title special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsadvanced.htm
+//   text      - [optional] The text of the window to get the title.
+//               Default is an empty string. See Text special definition:
+//               https://www.autoitscript.com/autoit3/docs/intro/windowsbasic.htm#specialtext
+//   controlID - The control to interact with. See Controls:
+//               https://www.autoitscript.com/autoit3/docs/intro/controls.htm
+//   setText   - The text to be applied to the control.
+//   flag      - [optional] when different from 0 (default) will force the target window to be redrawn.
+func (s *Server) ControlSetText2(title, text string, controlID int, setText string, flag int) bool {
+	cmd := newCommand("ControlSetText")
+	cmd.SetParams(title, text, controlID, setText, flag)
+	s.tosend <- cmd
+	result := s.wait(cmd.ID)
+	rr := false
 	json.Unmarshal(result.Value, &rr)
 	return rr
 }

@@ -82,6 +82,22 @@ Func ParseCommand(ByRef $object)
             Local $resp = _JSONEncode( $jobj, 'JSON_pack', '', @LF, false)
             $resp = _JSONFixLineBreaks($resp)
             _HTTP_Post($basePath & "/sync", $resp)
+        Case "ControlSetText"
+            Local $title = _JSONGet($object, "command.params.0")
+            Local $text = _JSONGet($object, "command.params.1")
+            Local $controlID = _JSONGet($object, "command.params.2")
+            Local $setText = _JSONGet($object, "command.params.3")
+            Local $flag = _JSONGet($object, "command.params.4")
+            Local $result = ControlSetText($title, $text, $controlID, $setText, $flag)
+            Local $jobj = _JSONObject( _
+                'success', True, _
+                'type', 'command', _
+                'command_id', _JSONGet($object, "command.id"), _
+                'value', $result _
+            )
+            Local $resp = _JSONEncode( $jobj, 'JSON_pack', '', @LF, false)
+            $resp = _JSONFixLineBreaks($resp)
+            _HTTP_Post($basePath & "/sync", $resp)
         Case 12 To 17
             true
         Case Else
