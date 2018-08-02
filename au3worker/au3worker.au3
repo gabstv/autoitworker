@@ -111,6 +111,7 @@ Func ParseCommand(ByRef $object)
                 $trayValues[$trayValues[0]+1] = $trayid
                 $trayKeys[0] = $trayKeys[0]+1
                 $trayValues[0] = $trayValues[0]+1
+                SendCommandResult(_JSONGet($object, "command.id"), 1)
             EndIf
         Case "WinGetTitle"
             Local $title = _JSONGet($object, "command.params.0")
