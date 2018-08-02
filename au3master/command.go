@@ -46,3 +46,9 @@ type au3resp struct {
 	CommandID string          `json:"command_id,omitempty"`
 	Value     json.RawMessage `json:"value,omitempty"`
 }
+
+// Int to pointer of int
+func Int(v int) *int {
+	u := v
+	return &u
+}
