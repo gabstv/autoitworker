@@ -118,6 +118,11 @@ Func ParseCommand(ByRef $object)
             Local $text = _JSONGet($object, "command.params.1")
             Local $result = WinGetTitle($title, $text)
             SendCommandResult(_JSONGet($object, "command.id"), $result)
+        Case "WinClose"
+            Local $title = _JSONGet($object, "command.params.0")
+            Local $text = _JSONGet($object, "command.params.1")
+            Local $result = WinClose($title, $text)
+            SendCommandResult(_JSONGet($object, "command.id"), $result)
         Case "ControlGetText"
             Local $title = _JSONGet($object, "command.params.0")
             Local $text = _JSONGet($object, "command.params.1")

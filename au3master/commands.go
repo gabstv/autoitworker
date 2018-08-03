@@ -125,6 +125,25 @@ func (s *Server) WinGetTitle(title, text string) string {
 	return rr
 }
 
+// WinClose Closes a window.
+//   title - The title/hWnd/class of the window to get the title.
+//           See Title special definition:
+//           https://www.autoitscript.com/autoit3/docs/intro/windowsadvanced.htm
+//   text  - [optional] The text of the window to get the title.
+//           Default is an empty string. See Text special definition:
+//           https://www.autoitscript.com/autoit3/docs/intro/windowsbasic.htm#specialtext
+//
+// https://www.autoitscript.com/autoit3/docs/functions/WinClose.htm
+func (s *Server) WinClose(title, text string) int {
+	cmd := newCommand("WinClose")
+	cmd.SetParams(title, text)
+	s.tosend <- cmd
+	result := s.wait(cmd.ID)
+	var rr int
+	json.Unmarshal(result.Value, &rr)
+	return rr
+}
+
 // ControlGetText Retrieves text from a control.
 //   title     - The title/hWnd/class of the window to get the title.
 //               See Title special definition:
