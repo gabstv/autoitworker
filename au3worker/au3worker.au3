@@ -137,10 +137,8 @@ Func ParseCommand(ByRef $object)
             Local $flag = _JSONGet($object, "command.params.4")
             Local $result = ControlSetText($title, $text, $controlID, $setText, $flag)
             SendCommandResult(_JSONGet($object, "command.id"), $result)
-        Case 12 To 17
-            true
         Case Else
-            false
+            SendCommandResult(_JSONGet($object, "command.id"), "unknown command")
     EndSwitch
 EndFunc
 
