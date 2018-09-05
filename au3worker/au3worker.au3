@@ -37,6 +37,9 @@ EndIf
 
 Func MainLoop()
     Local $data = _HTTP_Get($basePath & "/sync")
+    If (@error) Then
+        Return 1
+    EndIf
     Switch ($data)
         Case "0"
             ; do nothing

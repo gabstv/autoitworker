@@ -3,7 +3,23 @@ package au3master
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
+
+// Ping will send a ping command to test autoit connection
+func (s *Server) Ping() (time.Duration, error) {
+	t0 := time.Now()
+	cmd := newCommand("_ping_")
+	s.tosend <- cmd
+	rcvchan := s.waitchan(cmd.ID)
+	select {
+	case <-rcvchan:
+		return time.Now().Sub(t0), nil
+	case <-time.After(time.Second * 3):
+		//return 0, fmt.Errorf("timeout")
+	}
+	return 0, fmt.Errorf("timeout")
+}
 
 // AutoItSetOption - Changes the operation of various AutoIt functions/parameters.
 //

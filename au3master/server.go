@@ -124,6 +124,11 @@ func (s *Server) wait(id string) *Result {
 	return res
 }
 
+func (s *Server) waitchan(id string) <-chan *Result {
+	s.toreceive[id] = make(chan *Result)
+	return s.toreceive[id]
+}
+
 // RunHTTP server (blocks)
 func (s *Server) RunHTTP() error {
 	s.htps = &http.Server{
