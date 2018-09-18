@@ -6,11 +6,32 @@ import (
 	"time"
 )
 
+func (s *Server) sendcommand(cmd *Command) {
+	select {
+	case s.tosend <- cmd:
+	default:
+		// channel is full
+		if s.Stdout != nil {
+			s.Stdout.Write([]byte("[autoit master] channel is full!\r\n"))
+		}
+		for i := 0; i < 3; i++ {
+			select {
+			case droppedcmd := <-s.tosend:
+				if s.Stdout != nil {
+					s.Stdout.Write([]byte(fmt.Sprintf("dropped command {ID:%v Name:%v} \r\n", droppedcmd.ID, droppedcmd.Name)))
+				}
+			default:
+			}
+		}
+		s.tosend <- cmd
+	}
+}
+
 // Ping will send a ping command to test autoit connection
 func (s *Server) Ping(timeout time.Duration) (time.Duration, error) {
 	t0 := time.Now()
 	cmd := newCommand("_ping_")
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	rcvchan := s.waitchan(cmd.ID)
 	select {
 	case <-rcvchan:
@@ -27,7 +48,7 @@ func (s *Server) Ping(timeout time.Duration) (time.Duration, error) {
 func (s *Server) AutoItSetOption(option string, param interface{}) []byte {
 	cmd := newCommand("Opt")
 	cmd.SetParams(option, param)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	return result.Value
 }
@@ -38,7 +59,7 @@ func (s *Server) AutoItSetOption(option string, param interface{}) []byte {
 func (s *Server) TraySetIcon(filename string, iconID int) {
 	cmd := newCommand("TraySetIcon")
 	cmd.SetParams(filename, iconID)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	s.wait(cmd.ID)
 }
 
@@ -57,7 +78,7 @@ func (s *Server) TraySetIcon(filename string, iconID int) {
 func (s *Server) TrayTip(title, text string, timeout, option int) {
 	cmd := newCommand("TrayTip")
 	cmd.SetParams(title, text, timeout, option)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	s.wait(cmd.ID)
 }
 
@@ -76,7 +97,7 @@ func (s *Server) TrayTip(title, text string, timeout, option int) {
 func (s *Server) TraySetState(flag int) {
 	cmd := newCommand("TraySetState")
 	cmd.SetParams(flag)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	s.wait(cmd.ID)
 }
 
@@ -114,7 +135,7 @@ func (s *Server) TrayCreateItem(input TrayCreateItemInput) (<-chan bool, error) 
 	s.traychan[trayid] = make(chan bool, 2)
 	cmd := newCommand("TrayCreateItem")
 	cmd.SetParams(input.Text, *input.MenuID, *input.MenuEntry, input.MenuRadioItem, trayid)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	rr := 0
 	json.Unmarshal(result.Value, &rr)
@@ -134,7 +155,7 @@ func (s *Server) TrayCreateItem(input TrayCreateItemInput) (<-chan bool, error) 
 func (s *Server) WinGetTitle(title, text string) string {
 	cmd := newCommand("WinGetTitle")
 	cmd.SetParams(title, text)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	rr := ""
 	json.Unmarshal(result.Value, &rr)
@@ -153,7 +174,7 @@ func (s *Server) WinGetTitle(title, text string) string {
 func (s *Server) WinClose(title, text string) int {
 	cmd := newCommand("WinClose")
 	cmd.SetParams(title, text)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	var rr int
 	json.Unmarshal(result.Value, &rr)
@@ -172,7 +193,7 @@ func (s *Server) WinClose(title, text string) int {
 func (s *Server) ControlGetText(title, text, controlID string) string {
 	cmd := newCommand("ControlGetText")
 	cmd.SetParams(title, text, controlID)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	rr := ""
 	json.Unmarshal(result.Value, &rr)
@@ -191,7 +212,7 @@ func (s *Server) ControlGetText(title, text, controlID string) string {
 func (s *Server) ControlGetText2(title, text string, controlID int) string {
 	cmd := newCommand("ControlGetText")
 	cmd.SetParams(title, text, controlID)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	rr := ""
 	json.Unmarshal(result.Value, &rr)
@@ -212,7 +233,7 @@ func (s *Server) ControlGetText2(title, text string, controlID int) string {
 func (s *Server) ControlSetText(title, text, controlID, setText string, flag int) bool {
 	cmd := newCommand("ControlSetText")
 	cmd.SetParams(title, text, controlID, setText, flag)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	rr := false
 	json.Unmarshal(result.Value, &rr)
@@ -233,7 +254,7 @@ func (s *Server) ControlSetText(title, text, controlID, setText string, flag int
 func (s *Server) ControlSetText2(title, text string, controlID int, setText string, flag int) bool {
 	cmd := newCommand("ControlSetText")
 	cmd.SetParams(title, text, controlID, setText, flag)
-	s.tosend <- cmd
+	s.sendcommand(cmd)
 	result := s.wait(cmd.ID)
 	rr := false
 	json.Unmarshal(result.Value, &rr)

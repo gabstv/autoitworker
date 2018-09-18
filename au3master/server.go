@@ -3,6 +3,7 @@ package au3master
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,6 +23,7 @@ type Server struct {
 	htps      *http.Server
 	trayindex int
 	traychan  map[int]chan bool
+	Stdout    io.Writer
 }
 
 // new autoit command server relay
@@ -30,7 +32,7 @@ func new(path string, devmode bool) *Server {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	s := &Server{
-		tosend:    make(chan *Command, 32),
+		tosend:    make(chan *Command, 64),
 		toreceive: make(map[string]chan *Result),
 		hostaddr:  path,
 		shutdown0: make(chan bool, 1),
