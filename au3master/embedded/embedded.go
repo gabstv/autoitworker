@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -48,10 +49,10 @@ func Open(httppath string) (*Exe, error) {
 	ee.TempDir = dirpath
 	//
 	filepath := path.Join(dirpath, "au3worker.exe")
-	tfw, err := os.OpenFile(filepath, os.O_CREATE|os.O_RDWR, 0777)
+	tfw, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		os.RemoveAll(dirpath)
-		return nil, err
+		return nil, fmt.Errorf("os.OpenFile: %s", err.Error())
 	}
 	buf := bytes.NewBuffer(auWorkerExe)
 	_, err = io.Copy(tfw, buf)
