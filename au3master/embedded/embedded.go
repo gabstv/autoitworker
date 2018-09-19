@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"syscall"
 )
 
 //go:generate bin2var -I au3worker.exe
@@ -36,8 +35,7 @@ func (ee *Exe) IsRunning() bool {
 	if ee.Cmd.Process == nil {
 		return false
 	}
-	//pid := ee.Cmd.Process.Pid
-	err := ee.Cmd.Process.Signal(syscall.Signal(0))
+	_, err := os.FindProcess(ee.Cmd.Process.Pid)
 	return err == nil
 }
 
