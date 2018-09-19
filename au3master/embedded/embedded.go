@@ -66,7 +66,7 @@ func Open(httppath string) (*Exe, error) {
 	tfw.Close()
 	ee.TempExePath = filepath
 	cmdd := exec.Command(filepath, httppath)
-	cmdd.Stdout = os.Stdout
+	//cmdd.Stdout = os.Stdout
 	ee.Cmd = cmdd
 	err = ee.Cmd.Start()
 	if err != nil {
