@@ -42,6 +42,22 @@ func (s *Server) Ping(timeout time.Duration) (time.Duration, error) {
 	return 0, fmt.Errorf("timeout")
 }
 
+// SetConfigMaxErrors will send a _set_config_ command to set the max errors the http link will receive
+// before shutting down automatically.
+// If this is set to 0, the autoit worker will not close (unlimited).
+func (s *Server) SetConfigMaxErrors(maxErrors int) error {
+	cmd := newCommand("_set_config_")
+	cmd.SetParams("httpMaxErrors", maxErrors)
+	s.sendcommand(cmd)
+	rcvchan := s.waitchan(cmd.ID)
+	select {
+	case <-rcvchan:
+		return nil
+	case <-time.After(time.Second * 5):
+	}
+	return fmt.Errorf("timeout")
+}
+
 // AutoItSetOption - Changes the operation of various AutoIt functions/parameters.
 //
 // https://www.autoitscript.com/autoit3/docs/functions/AutoItSetOption.htm

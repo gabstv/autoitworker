@@ -14,8 +14,14 @@
 ; Hide tray icon!
 Opt("TrayIconHide", 1)
 
+
+; tray items storage
 Local $trayKeys[64] = [0]
 Local $trayValues[64] = [0]
+
+; configuration
+Local $httpErrorCount = 0
+Local $httpMaxErrors = 100
 
 Local $nparams = $CmdLine[0]
 
@@ -38,8 +44,13 @@ EndIf
 Func MainLoop()
     Local $data = _HTTP_Get($basePath & "/sync")
     If (@error) Then
+        $httpErrorCount = $httpErrorCount + 1
+        If $httpMaxErrors > 0 And $httpErrorCount > $httpMaxErrors Then
+            Return 0
+        EndIf
         Return 1
     EndIf
+    $httpErrorCount = 0
     Switch ($data)
         Case "0"
             ; do nothing
@@ -142,6 +153,12 @@ Func ParseCommand(ByRef $object)
             SendCommandResult(_JSONGet($object, "command.id"), $result)
         Case "_ping_"
             SendCommandResult(_JSONGet($object, "command.id"), "pong")
+        Case "_set_config_"
+            Local $cfgn = _JSONGet($object, "command.params.0")
+            If $cfgn = "httpMaxErrors" Then
+                $httpMaxErrors = _JSONGet($object, "command.params.1")
+            EndIf
+            SendCommandResult(_JSONGet($object, "command.id"), "ok")
         Case Else
             SendCommandResult(_JSONGet($object, "command.id"), "unknown command")
     EndSwitch
