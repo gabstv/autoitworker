@@ -11,6 +11,7 @@
 #include <InetConstants.au3>
 #include <File.au3>
 
+Opt("TrayMenuMode", 3)
 ; Hide tray icon!
 Opt("TrayIconHide", 1)
 
