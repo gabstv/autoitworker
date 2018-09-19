@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"syscall"
 )
 
 //go:generate bin2var -I au3worker.exe
@@ -32,10 +33,12 @@ func (ee *Exe) IsRunning() bool {
 	if ee.Cmd == nil {
 		return false
 	}
-	if ee.Cmd.ProcessState == nil {
+	if ee.Cmd.Process == nil {
 		return false
 	}
-	return !ee.Cmd.ProcessState.Exited()
+	//pid := ee.Cmd.Process.Pid
+	err := ee.Cmd.Process.Signal(syscall.Signal(0))
+	return err == nil
 }
 
 // Open creates a temporary directory, extracts the autoitworker executable
