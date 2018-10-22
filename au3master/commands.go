@@ -58,6 +58,21 @@ func (s *Server) SetConfigMaxErrors(maxErrors int) error {
 	return fmt.Errorf("timeout")
 }
 
+// SetConfigWatchProcess will send a _set_config_ command to set the watch proccess property.
+// If the watch process is set, the worker will exit if the process is not found.
+func (s *Server) SetConfigWatchProcess(processIDorName interface{}) error {
+	cmd := newCommand("_set_config_")
+	cmd.SetParams("watchprocess", processIDorName)
+	s.sendcommand(cmd)
+	rcvchan := s.waitchan(cmd.ID)
+	select {
+	case <-rcvchan:
+		return nil
+	case <-time.After(time.Second * 5):
+	}
+	return fmt.Errorf("timeout")
+}
+
 // AutoItSetOption - Changes the operation of various AutoIt functions/parameters.
 //
 // https://www.autoitscript.com/autoit3/docs/functions/AutoItSetOption.htm
