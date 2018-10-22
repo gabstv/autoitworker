@@ -20,6 +20,10 @@ Opt("TrayIconHide", 1)
 Local $trayKeys[64] = [0]
 Local $trayValues[64] = [0]
 
+; watch PID (if not 0)
+Local $watchprocess = ""
+Local $watchprocesscount = 0
+
 ; configuration
 Local $httpErrorCount = 0
 Local $httpMaxErrors = 100
@@ -158,6 +162,8 @@ Func ParseCommand(ByRef $object)
             Local $cfgn = _JSONGet($object, "command.params.0")
             If $cfgn = "httpMaxErrors" Then
                 $httpMaxErrors = _JSONGet($object, "command.params.1")
+            ElseIf $cfgn = "watchprocess" Then
+                $watchprocess = _JSONGet($object, "command.params.1")
             EndIf
             SendCommandResult(_JSONGet($object, "command.id"), "ok")
         Case Else
@@ -177,6 +183,15 @@ Func Run1()
             Next
         EndIf
         Sleep(10)
+        $watchprocesscount = $watchprocesscount + 1
+        If $watchprocesscount > 1000 Then
+            $watchprocesscount = 0
+            If $watchprocess <> "" Then
+                If Not ProcessExists($watchprocess) Then
+                    Exit 2
+                EndIf
+            EndIf
+        EndIf
         $lastCode = MainLoop()
     WEnd
     Exit 0
