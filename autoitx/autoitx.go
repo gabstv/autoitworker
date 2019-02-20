@@ -34,7 +34,7 @@ func abort(funcname string, err error) {
 //               https://www.autoitscript.com/autoit3/docs/intro/controls.htm
 func ControlGetText(title, text, controlID string) string {
 	buf := make([]uint16, 1024*16)
-	ret, _, callErr := au3ControlGetText.Call(
+	_, _, callErr := au3ControlGetText.Call(
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(title))),
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(controlID))),
