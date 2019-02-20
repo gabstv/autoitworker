@@ -44,7 +44,6 @@ func ControlGetText(title, text, controlID string) string {
 	if callErr != nil && !IsErrSuccess(callErr) {
 		abort("Call ControlGetText", callErr)
 	}
-	println(ret)
 	return syscall.UTF16ToString(buf)
 }
 
